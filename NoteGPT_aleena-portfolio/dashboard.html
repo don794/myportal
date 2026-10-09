@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Aleena Bilal">
+    <meta name="description" content="Semester GPA result table with subjects, course codes, marks and percentages.">
+    <title>GPA Dashboard | Aleena Bilal</title>
+
+    <!--
+        Montserrat webfont.
+        NOTE: every layout rule lives in the internal <style> block below.
+        This single <link> only loads the font; delete it for a 100% offline copy
+        and the internal font-stack will fall back to the system sans-serif.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+
+    <style>
+
+    /* ==========================================================
+       1. DESIGN TOKENS  (single source of truth for the theme)
+       ========================================================== */
+    :root {
+        --black:          #07060a;   /* deep black background   */
+        --black-soft:     #110710;   /* softened black          */
+        --cherry:         #d2042d;   /* cherry red - main brand */
+        --cherry-bright:  #ff3355;   /* cherry red - highlights */
+        --cherry-deep:    #6d0016;   /* cherry red - shadows    */
+        --text:           #f4f1f2;   /* primary text            */
+        --muted:          #b9abb1;   /* secondary text          */
+        --line:           rgba(255, 51, 85, 0.22);
+        --glass:          rgba(20, 8, 13, 0.72);
+        --glow:           0 0 18px rgba(210, 4, 45, 0.55);
+        --glow-strong:    0 0 30px rgba(255, 51, 85, 0.65);
+        --shadow:         0 18px 40px rgba(0, 0, 0, 0.55);
+        --radius:         18px;
+        --radius-sm:      12px;
+    }
+
+    /* ==========================================================
+       2. RESET + PAGE BACKGROUND (black -> cherry-red gradient)
+       ========================================================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+        font-family: "Montserrat", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        line-height: 1.65;
+        min-height: 100vh;
+        background-color: var(--black);
+        background-image:
+            radial-gradient(circle at 88% 4%,  rgba(210, 4, 45, 0.38), transparent 46%),
+            radial-gradient(circle at 8% 92%,  rgba(109, 0, 22, 0.45), transparent 52%),
+            linear-gradient(135deg, #07060a 0%, #0f0508 38%, #2a0410 70%, #4d0a1c 100%);
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+    }
+
+    /* ==========================================================
+       3. LAYOUT HELPERS
+       ========================================================== */
+    .container { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
+    .section   { padding: 52px 0; }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 26px;
+    }
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+        gap: 22px;
+    }
+    .split {
+        display: grid;
+        grid-template-columns: 1.55fr 0.95fr;
+        gap: 26px;
+        align-items: start;
+    }
+
+    .section-title {
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    .section-title span { color: var(--cherry-bright); }
+
+    .section-sub {
+        color: var(--muted);
+        font-size: 0.94rem;
+        margin-bottom: 26px;
+        max-width: 78ch;
+    }
+
+    /* ==========================================================
+       4. SITE HEADER + NAVIGATION
+       ========================================================== */
+    .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: linear-gradient(90deg, rgba(7, 6, 10, 0.94), rgba(40, 4, 17, 0.94));
+        border-bottom: 1px solid var(--line);
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+    }
+    .header-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 13px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text);
+    }
+    .brand img {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--cherry);
+        box-shadow: var(--glow);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .brand:hover img { transform: scale(1.07); box-shadow: var(--glow-strong); }
+    .brand-text strong { display: block; font-size: 1rem; letter-spacing: 0.6px; }
+    .brand-text span {
+        display: block;
+        font-size: 0.68rem;
+        letter-spacing: 2.4px;
+        text-transform: uppercase;
+        color: var(--cherry-bright);
+    }
+
+    .main-nav ul { display: flex; list-style: none; gap: 6px; flex-wrap: wrap; }
+    .main-nav a {
+        display: block;
+        padding: 9px 15px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        transition: color 0.3s ease, background 0.3s ease,
+                    border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .main-nav a:hover,
+    .main-nav a:focus-visible {
+        color: #fff;
+        background: rgba(210, 4, 45, 0.16);
+        border-color: var(--line);
+        box-shadow: var(--glow);
+        transform: translateY(-2px);
+    }
+    .main-nav a.active {
+        color: #fff;
+        background: linear-gradient(135deg, var(--cherry-bright), var(--cherry-deep));
+        box-shadow: var(--glow);
+    }
+
+    /* ==========================================================
+       5. BUTTONS  (cherry-red hover glow)
+       ========================================================== */
+    .btn {
+        display: inline-block;
+        padding: 13px 26px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease,
+                    background 0.3s ease, border-color 0.3s ease, filter 0.3s ease;
+    }
+    .btn-primary {
+        color: #fff;
+        background: linear-gradient(135deg, var(--cherry-bright), var(--cherry) 55%, var(--cherry-deep));
+        box-shadow: 0 12px 26px rgba(210, 4, 45, 0.35);
+    }
+    .btn-primary:hover,
+    .btn-primary:focus-visible {
+        transform: translateY(-3px);
+        box-shadow: var(--glow-strong);
+        filter: brightness(1.08);
+    }
+    .btn-ghost {
+        color: var(--text);
+        background: transparent;
+        border-color: var(--line);
+    }
+    .btn-ghost:hover,
+    .btn-ghost:focus-visible {
+        color: #fff;
+        border-color: var(--cherry-bright);
+        box-shadow: var(--glow);
+        transform: translateY(-3px);
+    }
+    .btn-block { display: block; width: 100%; }
+    .btn-sm { padding: 10px 20px; font-size: 0.8rem; }
+
+    /* ==========================================================
+       6. CARDS
+       ========================================================== */
+    .card {
+        background: var(--glass);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 26px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(6px);
+        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    .card:hover {
+        transform: translateY(-6px);
+        border-color: var(--cherry-bright);
+        box-shadow: 0 0 28px rgba(255, 51, 85, 0.45), var(--shadow);
+    }
+    .card h3 { font-size: 1.1rem; margin-bottom: 10px; letter-spacing: 0.4px; }
+    .card p  { font-size: 0.9rem; color: var(--muted); }
+    .card-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        margin-bottom: 14px;
+        border-radius: 14px;
+        color: var(--cherry-bright);
+        background: linear-gradient(135deg, rgba(210, 4, 45, 0.35), rgba(109, 0, 22, 0.25));
+        border: 1px solid var(--line);
+        transition: box-shadow 0.35s ease, transform 0.35s ease;
+    }
+    .card-icon svg { width: 22px; height: 22px; display: block; }
+    .card:hover .card-icon { box-shadow: var(--glow); transform: translateY(-2px); }
+    .link-card { display: block; text-decoration: none; color: inherit; }
+
+    /* ==========================================================
+       7. PAGE BANNER (inner pages)
+       ========================================================== */
+    .page-banner { text-align: center; padding: 58px 22px 6px; }
+    .page-banner h1 {
+        font-size: clamp(1.75rem, 4vw, 2.6rem);
+        font-weight: 800;
+        letter-spacing: 0.6px;
+    }
+    .page-banner h1 span { color: var(--cherry-bright); }
+    .page-banner p {
+        max-width: 72ch;
+        margin: 14px auto 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+    }
+
+    /* ==========================================================
+       8. HERO (welcome page)
+       ========================================================== */
+    .hero {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 66px 22px 34px;
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 46px;
+        align-items: center;
+    }
+    .eyebrow {
+        display: inline-block;
+        padding: 7px 15px;
+        margin-bottom: 20px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(210, 4, 45, 0.12);
+        color: var(--cherry-bright);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 2.4px;
+        text-transform: uppercase;
+    }
+    .hero h1 {
+        font-size: clamp(1.95rem, 4.6vw, 3.05rem);
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: 0.4px;
+    }
+    .hero h1 em {
+        font-style: normal;
+        background: linear-gradient(135deg, var(--cherry-bright), var(--cherry));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .hero .lead {
+        margin: 18px 0 28px;
+        max-width: 58ch;
+        color: var(--muted);
+        font-size: 0.98rem;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    .hero-visual { position: relative; display: flex; justify-content: center; }
+    .hero-photo {
+        position: relative;
+        width: min(340px, 78vw);
+        aspect-ratio: 1 / 1;
+        padding: 6px;
+        border-radius: 26px;
+        background: linear-gradient(135deg, var(--cherry-bright), transparent 46%, var(--cherry-deep));
+        box-shadow: 0 0 44px rgba(210, 4, 45, 0.5);
+        transition: box-shadow 0.4s ease, transform 0.4s ease;
+    }
+    .hero-photo:hover { transform: translateY(-6px); box-shadow: var(--glow-strong); }
+    .hero-photo img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 22px;
+        object-fit: cover;
+    }
+    .float-badge {
+        position: absolute;
+        padding: 10px 16px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(10, 4, 7, 0.92);
+        box-shadow: var(--glow);
+        font-size: 0.76rem;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        backdrop-filter: blur(6px);
+    }
+    .float-badge.top    { top: 16px; left: -4px; }
+    .float-badge.bottom { right: -8px; bottom: 26px; }
+
+    /* ==========================================================
+       9. AVATARS + PROFILE STRIP
+       ========================================================== */
+    .avatar {
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--cherry);
+        box-shadow: var(--glow);
+        background: #12070b;
+        transition: box-shadow 0.4s ease, transform 0.4s ease;
+    }
+    .avatar:hover { box-shadow: var(--glow-strong); transform: scale(1.04); }
+    .avatar-lg { width: 180px; height: 180px; }
+
+    .profile-strip {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        flex-wrap: wrap;
+    }
+    .profile-strip .who h2 { font-size: 1.45rem; letter-spacing: 0.5px; }
+    .profile-strip .who p  { color: var(--muted); font-size: 0.9rem; }
+    .meta-list {
+        display: flex;
+        gap: 12px 26px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        padding: 0;
+        list-style: none;
+    }
+    .meta-list li { font-size: 0.85rem; color: var(--muted); }
+    .meta-list li strong { color: var(--text); display: block; font-size: 0.72rem;
+        text-transform: uppercase; letter-spacing: 1.4px; color: var(--cherry-bright); }
+
+    /* ==========================================================
+       10. STATISTICS STRIP
+       ========================================================== */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; }
+    .stat {
+        padding: 22px 16px;
+        text-align: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--glass);
+        box-shadow: var(--shadow);
+        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    .stat:hover { transform: translateY(-6px); border-color: var(--cherry-bright); box-shadow: var(--glow); }
+    .stat strong { display: block; font-size: 1.75rem; color: var(--cherry-bright); letter-spacing: 0.5px; }
+    .stat span { font-size: 0.73rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+
+    /* ==========================================================
+       11. RESULT TABLE (GPA dashboard)
+       ========================================================== */
+    .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+    table.result {
+        width: 100%;
+        min-width: 660px;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+        background: rgba(12, 5, 9, 0.62);
+    }
+    table.result caption {
+        caption-side: top;
+        padding: 16px 20px;
+        text-align: left;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        color: var(--text);
+        background: linear-gradient(90deg, rgba(210, 4, 45, 0.38), transparent);
+        border-bottom: 1px solid var(--line);
+    }
+    table.result thead th {
+        padding: 14px 18px;
+        text-align: left;
+        white-space: nowrap;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 1.3px;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, var(--cherry) 0%, var(--cherry-deep) 100%);
+    }
+    table.result tbody td {
+        padding: 14px 18px;
+        border-bottom: 1px solid rgba(255, 51, 85, 0.14);
+    }
+    table.result tbody tr { transition: background 0.3s ease, box-shadow 0.3s ease; }
+    table.result tbody tr:hover {
+        background: rgba(210, 4, 45, 0.18);
+        box-shadow: inset 4px 0 0 var(--cherry-bright);
+    }
+    table.result tbody tr:last-child td { border-bottom: none; }
+    table.result tfoot td {
+        padding: 14px 18px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: #fff;
+        background: rgba(210, 4, 45, 0.24);
+        border-top: 1px solid var(--line);
+    }
+    .course {
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 0.86rem;
+        letter-spacing: 0.5px;
+        color: var(--cherry-bright);
+    }
+    .gpa-pill {
+        display: inline-block;
+        min-width: 54px;
+        padding: 4px 11px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(210, 4, 45, 0.25);
+        text-align: center;
+        font-weight: 700;
+        transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    }
+    table.result tbody tr:hover .gpa-pill {
+        color: #fff;
+        background: var(--cherry);
+        box-shadow: var(--glow);
+    }
+    .result-note { margin-top: 14px; font-size: 0.82rem; color: var(--muted); }
+
+    /* ==========================================================
+       12. FORMS (register + login + contact)
+       ========================================================== */
+    .form-card {
+        background: var(--glass);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 34px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(6px);
+    }
+    .form-card > h2 { font-size: 1.3rem; margin-bottom: 6px; }
+    .form-card > .form-intro { color: var(--muted); font-size: 0.88rem; margin-bottom: 24px; }
+
+    fieldset {
+        margin-bottom: 26px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+    }
+    fieldset:last-of-type { margin-bottom: 18px; }
+    legend {
+        padding: 0 10px;
+        color: var(--cherry-bright);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+    }
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 18px;
+    }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label { font-size: 0.79rem; font-weight: 600; letter-spacing: 0.5px; color: var(--muted); }
+    .field .req { color: var(--cherry-bright); }
+    .field .hint { font-size: 0.74rem; color: #8d7d83; }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 12px 14px;
+        font-family: inherit;
+        font-size: 0.92rem;
+        color: var(--text);
+        background: rgba(8, 4, 6, 0.85);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    }
+    textarea { resize: vertical; min-height: 130px; }
+    input::placeholder, textarea::placeholder { color: #7d6f75; }
+    input:hover, select:hover, textarea:hover { border-color: rgba(255, 51, 85, 0.45); }
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--cherry-bright);
+        background: rgba(22, 6, 12, 0.95);
+        box-shadow: var(--glow);
+    }
+    select {
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--cherry-bright) 50%),
+                          linear-gradient(135deg, var(--cherry-bright) 50%, transparent 50%);
+        background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+        background-size: 6px 6px, 6px 6px;
+        background-repeat: no-repeat;
+        padding-right: 40px;
+    }
+    select option { background: #14070c; color: var(--text); }
+
+    .check { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: var(--muted); }
+    .check input { width: auto; margin-top: 4px; accent-color: var(--cherry); }
+    .check a { color: var(--cherry-bright); text-decoration: none; }
+    .check a:hover { text-decoration: underline; }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+    .form-foot {
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+        text-align: center;
+        font-size: 0.86rem;
+        color: var(--muted);
+    }
+    .form-foot a { color: var(--cherry-bright); font-weight: 600; text-decoration: none; }
+    .form-foot a:hover { text-shadow: 0 0 12px rgba(255, 51, 85, 0.9); }
+
+    .login-shell { max-width: 470px; margin: 0 auto; }
+    .login-head { text-align: center; margin-bottom: 24px; }
+    .login-head h1 { font-size: 1.5rem; margin: 14px 0 6px; }
+    .login-head p { font-size: 0.86rem; color: var(--muted); }
+    .inline-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin: 6px 0 20px;
+    }
+    .inline-row a { color: var(--cherry-bright); font-size: 0.82rem; text-decoration: none; }
+    .inline-row a:hover { text-shadow: 0 0 12px rgba(255, 51, 85, 0.9); }
+
+    /* ==========================================================
+       13. CHIPS / TAGS
+       ========================================================== */
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; }
+    .chips li {
+        padding: 9px 16px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(210, 4, 45, 0.14);
+        font-size: 0.83rem;
+        color: var(--text);
+        transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .chips li:hover {
+        background: var(--cherry);
+        box-shadow: var(--glow);
+        transform: translateY(-3px);
+    }
+
+    /* ==========================================================
+       14. TIMELINE / LISTS
+       ========================================================== */
+    .timeline { list-style: none; padding-left: 22px; border-left: 2px solid var(--line); display: grid; gap: 24px; }
+    .timeline li { position: relative; }
+    .timeline li::before {
+        content: "";
+        position: absolute;
+        left: -30px;
+        top: 6px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--cherry);
+        box-shadow: var(--glow);
+    }
+    .timeline h4 { font-size: 1rem; letter-spacing: 0.3px; }
+    .timeline .when {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--cherry-bright);
+        font-size: 0.73rem;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+    }
+    .timeline p { font-size: 0.88rem; color: var(--muted); }
+
+    .tick-list { list-style: none; display: grid; gap: 12px; }
+    .tick-list li { position: relative; padding-left: 28px; font-size: 0.88rem; color: var(--muted); }
+    .tick-list li::before {
+        content: "\2713";
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: var(--cherry-bright);
+        font-weight: 700;
+    }
+    .tick-list li strong { color: var(--text); }
+
+    /* ==========================================================
+       15. NOTES / CALLOUTS
+       ========================================================== */
+    .note {
+        padding: 16px 20px;
+        margin-top: 22px;
+        border-left: 4px solid var(--cherry);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        background: rgba(210, 4, 45, 0.12);
+        font-size: 0.86rem;
+        color: var(--muted);
+    }
+    .note strong { color: var(--text); }
+
+    /* ==========================================================
+       16. IMAGE GALLERY (project screenshots)
+       ========================================================== */
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; }
+    .gallery figure {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--glass);
+        box-shadow: var(--shadow);
+        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+    .gallery figure:hover {
+        transform: translateY(-6px);
+        border-color: var(--cherry-bright);
+        box-shadow: 0 0 28px rgba(255, 51, 85, 0.45), var(--shadow);
+    }
+    .gallery img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        object-position: top center;
+        transition: transform 0.5s ease;
+    }
+    .gallery figure:hover img { transform: scale(1.05); }
+    .gallery figcaption { padding: 16px 18px; font-size: 0.85rem; color: var(--muted); }
+    .gallery figcaption strong { display: block; margin-bottom: 5px; color: var(--text); font-size: 0.95rem; }
+
+    /* ==========================================================
+       17. CONTACT BLOCKS
+       ========================================================== */
+    .info-card { display: flex; gap: 16px; align-items: flex-start; }
+    .info-card .card-icon { margin-bottom: 0; flex: 0 0 auto; }
+    .info-card h3 { font-size: 0.95rem; margin-bottom: 4px; }
+    .info-card a, .info-card span.value {
+        color: var(--cherry-bright);
+        font-size: 0.88rem;
+        text-decoration: none;
+        word-break: break-word;
+        transition: text-shadow 0.3s ease, color 0.3s ease;
+    }
+    .info-card a:hover { color: #fff; text-shadow: 0 0 14px rgba(255, 51, 85, 0.95); }
+    .info-card p { font-size: 0.84rem; color: var(--muted); margin-top: 4px; }
+
+    .availability {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        margin-bottom: 16px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(210, 4, 45, 0.14);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.6px;
+    }
+    .availability::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #22d37a;
+        box-shadow: 0 0 12px rgba(34, 211, 122, 0.9);
+    }
+
+    /* ==========================================================
+       18. SITE FOOTER  (identical on every page)
+       ========================================================== */
+    .site-footer {
+        margin-top: 66px;
+        border-top: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(8, 4, 6, 0.35), rgba(58, 4, 20, 0.88));
+    }
+    .footer-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 48px 22px 30px;
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1.1fr;
+        gap: 34px;
+    }
+    .footer-col h3 { font-size: 1.05rem; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .footer-col h4 {
+        margin-bottom: 14px;
+        color: var(--cherry-bright);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+    }
+    .footer-col p { font-size: 0.85rem; color: var(--muted); }
+    .footer-col ul { list-style: none; display: grid; gap: 9px; }
+    .footer-col a {
+        color: var(--muted);
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: color 0.3s ease, text-shadow 0.3s ease, padding-left 0.3s ease;
+    }
+    .footer-col a:hover {
+        padding-left: 5px;
+        color: #fff;
+        text-shadow: 0 0 12px rgba(255, 51, 85, 0.9);
+    }
+    .footer-avatar {
+        display: block;
+        width: 66px;
+        height: 66px;
+        margin-bottom: 12px;
+        border: 2px solid var(--cherry);
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: var(--glow);
+    }
+    .footer-bottom {
+        padding: 20px 22px;
+        border-top: 1px solid var(--line);
+        text-align: center;
+        font-size: 0.8rem;
+        letter-spacing: 0.6px;
+        color: var(--muted);
+    }
+    .footer-bottom strong { color: var(--cherry-bright); font-weight: 600; }
+
+    /* ==========================================================
+       19. ENTRANCE ANIMATION
+       ========================================================== */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.7s ease both; }
+    .delay-1 { animation-delay: 0.12s; }
+    .delay-2 { animation-delay: 0.24s; }
+    .delay-3 { animation-delay: 0.36s; }
+
+    /* ==========================================================
+       20. RESPONSIVE  (tablet + mobile)
+       ========================================================== */
+    @media (max-width: 980px) {
+        .hero      { grid-template-columns: 1fr; gap: 38px; padding-top: 48px; text-align: center; }
+        .hero .lead { margin-left: auto; margin-right: auto; }
+        .hero-actions { justify-content: center; }
+        .split     { grid-template-columns: 1fr; }
+        .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 700px) {
+        .header-inner { flex-direction: column; gap: 10px; }
+        .main-nav ul  { justify-content: center; }
+        .main-nav a   { padding: 8px 11px; font-size: 0.8rem; }
+        .section      { padding: 40px 0; }
+        .form-card    { padding: 24px; }
+        .card         { padding: 22px; }
+        .profile-strip { justify-content: center; text-align: center; }
+        .meta-list    { justify-content: center; }
+        .footer-inner { grid-template-columns: 1fr; text-align: center; }
+        .footer-avatar { margin-left: auto; margin-right: auto; }
+        .float-badge.top    { left: 4px; }
+        .float-badge.bottom { right: 4px; }
+        .form-actions { justify-content: stretch; }
+        .form-actions .btn { flex: 1 1 auto; }
+    }
+    </style>
+</head>
+<body>
+
+    <!--
+    ==========================================================
+      FILE    : dashboard.html
+      PURPOSE : GPA result table / dashboard
+      THEME   : black -> cherry-red linear gradient
+      STACK   : HTML5 + internal CSS only (no external JS)
+    ==========================================================
+    -->
+
+    <!-- ==================== SITE HEADER ==================== -->
+    <header class="site-header">
+        <div class="header-inner">
+            <!-- Brand / profile selector -->
+            <a class="brand" href="index.html">
+                <img src="assets/profile-circle.png" alt="Profile photo of Aleena Bilal">
+                <span class="brand-text">
+                    <strong>Aleena Bilal</strong>
+                    <span>Assignment Portal</span>
+                </span>
+            </a>
+
+            <!-- Main navigation (repeated on every page) -->
+            <nav class="main-nav" aria-label="Main navigation">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="dashboard.html" class="active" aria-current="page">Dashboard</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="register.html">Register</a></li>
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main>
+
+        <!-- ==================== PAGE BANNER ==================== -->
+        <section class="page-banner">
+            <h1>GPA Result <span>Dashboard</span></h1>
+            <p>
+                Subject-wise performance for the current semester: marks, percentage and grade point
+                average, calculated from the six core Computer Science courses below.
+            </p>
+        </section>
+
+        <!-- ==================== STUDENT CARD ==================== -->
+        <section class="section">
+            <div class="container">
+                <div class="card profile-strip fade-up">
+                    <img class="avatar avatar-lg" src="assets/profile-circle.png"
+                         alt="Profile photo of Aleena Bilal">
+
+                    <div class="who">
+                        <h2>Aleena Bilal</h2>
+                        <p>BS Computer Science &middot; Government Graduate College, Gujranwala</p>
+
+                        <ul class="meta-list">
+                            <li><strong>Student ID</strong>GGC-CS-2024-018</li>
+                            <li><strong>Semester</strong>6th Semester</li>
+                            <li><strong>Expected Graduation</strong>2028</li>
+                            <li><strong>CGPA</strong>3.55 / 4.00</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SUMMARY METRICS ==================== -->
+        <section class="section" style="padding-top:0;">
+            <div class="container">
+                <div class="stats">
+                    <div class="stat"><strong>498</strong><span>Total Marks / 600</span></div>
+                    <div class="stat"><strong>83%</strong><span>Average Percentage</span></div>
+                    <div class="stat"><strong>3.55</strong><span>Semester GPA</span></div>
+                    <div class="stat"><strong>A</strong><span>Overall Grade</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== GPA RESULT TABLE ====================
+             The table cells carry data-* attributes so that a future
+             JavaScript module can turn them into editable inputs and
+             recalculate the GPA live. No JS is included at this stage.
+             ========================================================= -->
+        <section class="section" style="padding-top:0;">
+            <div class="container">
+                <h2 class="section-title">Semester <span>result sheet</span></h2>
+                <p class="section-sub">Hover any row to highlight it with a cherry-red glow.</p>
+
+                <div class="table-wrap fade-up">
+                    <table class="result">
+                        <caption>BS Computer Science &mdash; 6th Semester Result (2026)</caption>
+
+                        <thead>
+                            <tr>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Course Code</th>
+                                <th scope="col">Marks</th>
+                                <th scope="col">Percentage</th>
+                                <th scope="col">GPA</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td data-subject="Programming Fundamentals">Programming Fundamentals</td>
+                                <td><span class="course">CS101</span></td>
+                                <td data-field="marks">85</td>
+                                <td data-field="percentage">85%</td>
+                                <td><span class="gpa-pill">3.7</span></td>
+                            </tr>
+                            <tr>
+                                <td data-subject="Database Systems">Database Systems</td>
+                                <td><span class="course">CS202</span></td>
+                                <td data-field="marks">78</td>
+                                <td data-field="percentage">78%</td>
+                                <td><span class="gpa-pill">3.3</span></td>
+                            </tr>
+                            <tr>
+                                <td data-subject="Operating Systems">Operating Systems</td>
+                                <td><span class="course">CS303</span></td>
+                                <td data-field="marks">90</td>
+                                <td data-field="percentage">90%</td>
+                                <td><span class="gpa-pill">4.0</span></td>
+                            </tr>
+                            <tr>
+                                <td data-subject="Computer Networks">Computer Networks</td>
+                                <td><span class="course">CS304</span></td>
+                                <td data-field="marks">82</td>
+                                <td data-field="percentage">82%</td>
+                                <td><span class="gpa-pill">3.5</span></td>
+                            </tr>
+                            <tr>
+                                <td data-subject="Software Engineering">Software Engineering</td>
+                                <td><span class="course">CS305</span></td>
+                                <td data-field="marks">75</td>
+                                <td data-field="percentage">75%</td>
+                                <td><span class="gpa-pill">3.0</span></td>
+                            </tr>
+                            <tr>
+                                <td data-subject="Artificial Intelligence">Artificial Intelligence</td>
+                                <td><span class="course">CS306</span></td>
+                                <td data-field="marks">88</td>
+                                <td data-field="percentage">88%</td>
+                                <td><span class="gpa-pill">3.8</span></td>
+                            </tr>
+                        </tbody>
+
+                        <tfoot>
+                            <tr>
+                                <td colspan="2">Total / Average</td>
+                                <td>498 / 600</td>
+                                <td>83%</td>
+                                <td>3.55</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <p class="result-note">
+                    Grade scale: 90&ndash;100 = 4.0 &middot; 80&ndash;89 = 3.3&ndash;3.7 &middot;
+                    75&ndash;79 = 3.0 &middot; below 75 = below 3.0.
+                </p>
+
+                <p class="note">
+                    <strong>Planned upgrade:</strong> each mark, percentage and GPA cell already exposes
+                    <em>data-field</em> and <em>data-subject</em> attributes, so a small JavaScript module
+                    can later make the table editable and recalculate the CGPA instantly.
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== PROJECT VISUALS ==================== -->
+        <section class="section" style="padding-top:0;">
+            <div class="container">
+                <h2 class="section-title">Project <span>screenshots</span></h2>
+                <p class="section-sub">Interface previews from the Assignment Portal and the Editable GPA Table projects.</p>
+
+                <div class="gallery fade-up">
+                    <figure>
+                        <img src="assets/project-assignment-portal.png"
+                             alt="Screenshot of the Assignment Portal welcome page">
+                        <figcaption>
+                            <strong>Assignment Portal (HTML/CSS)</strong>
+                            Multi-page site with login, register and dashboard pages using a
+                            black-and-cherry-red gradient theme.
+                        </figcaption>
+                    </figure>
+
+                    <figure>
+                        <img src="assets/project-gpa-table.png"
+                             alt="Screenshot of the Editable GPA Table with subject rows">
+                        <figcaption>
+                            <strong>Editable GPA Table</strong>
+                            Displays subjects, course codes, marks, percentages and GPA in a
+                            clean, gradient-headed table layout.
+                        </figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== SITE FOOTER ==================== -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <!-- Column 1 : brand -->
+            <div class="footer-col">
+                <img class="footer-avatar" src="assets/profile-circle.png" alt="Aleena Bilal">
+                <h3>Aleena Bilal</h3>
+                <p>
+                    BS Computer Science student and aspiring remote data-entry / data-verification
+                    specialist based in Gujranwala, Punjab, Pakistan.
+                </p>
+            </div>
+
+            <!-- Column 2 : page links -->
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Assignment Portal</a></li>
+                    <li><a href="dashboard.html">GPA Dashboard</a></li>
+                    <li><a href="about.html">About Me</a></li>
+                    <li><a href="register.html">Create Account</a></li>
+                    <li><a href="login.html">Student Login</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 3 : contact details -->
+            <div class="footer-col">
+                <h4>Get in Touch</h4>
+                <ul>
+                    <li><a href="mailto:cheemaaleen794@gmail.com">cheemaaleen794@gmail.com</a></li>
+                    <li><a href="tel:+923206916902">+92-320-6916902</a></li>
+                    <li>Gujranwala, Punjab, Pakistan</li>
+                    <li><a href="https://www.fiverr.com/" target="_blank" rel="noopener">Fiverr &mdash; MyFiverProfile</a></li>
+                    <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub &mdash; MyGithubProfile</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Copyright notice (required on all pages) -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 All rights reserved to <strong>Aleena Bilal</strong>.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
